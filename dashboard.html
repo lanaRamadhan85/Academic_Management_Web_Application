@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistem Akademik Mini</title>
+    <meta name="description" content="Dashboard Admin - Manajemen data mahasiswa, mata kuliah, IPS dan IPK">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <!-- jsPDF untuk export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- SheetJS untuk export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="dashboard-body">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <iconify-icon icon="lucide:graduation-cap" width="24" height="24"></iconify-icon>
+                <span>Akademik</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard" id="navDashboard">
+                <iconify-icon icon="lucide:layout-grid" width="20" height="20"></iconify-icon>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-page="mahasiswa" id="navMahasiswa">
+                <iconify-icon icon="lucide:users" width="20" height="20"></iconify-icon>
+                <span>Mahasiswa</span>
+            </a>
+            <a href="#" class="nav-item" data-page="matakuliah" id="navMataKuliah">
+                <iconify-icon icon="lucide:book-open" width="20" height="20"></iconify-icon>
+                <span>Mata Kuliah</span>
+            </a>
+            <a href="#" class="nav-item" data-page="export" id="navExport">
+                <iconify-icon icon="lucide:download" width="20" height="20"></iconify-icon>
+                <span>Export Data</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="nav-item logout-btn" id="logoutBtn">
+                <iconify-icon icon="lucide:log-out" width="20" height="20"></iconify-icon>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- MOBILE HEADER -->
+    <header class="mobile-header" id="mobileHeader">
+        <button class="hamburger" id="hamburgerBtn">
+            <span></span><span></span><span></span>
+        </button>
+        <span class="mobile-title">Sistem Akademik</span>
+    </header>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="mainContent">
+
+        <!-- PAGE: DASHBOARD -->
+        <section class="page active" id="pageDashboard">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p class="page-desc">Selamat datang di Sistem Akademik Mini</p>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="stats-grid">
+                <div class="stat-card stat-card--blue">
+                    <div class="stat-icon">
+                        <iconify-icon icon="lucide:users" width="28" height="28"></iconify-icon>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statMahasiswa">0</span>
+                        <span class="stat-label">Total Mahasiswa</span>
+                    </div>
+                </div>
+                <div class="stat-card stat-card--green">
+                    <div class="stat-icon">
+                        <iconify-icon icon="lucide:book-open" width="28" height="28"></iconify-icon>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statMataKuliah">0</span>
+                        <span class="stat-label">Total Mata Kuliah</span>
+                    </div>
+                </div>
+                <div class="stat-card stat-card--purple">
+                    <div class="stat-icon">
+                        <iconify-icon icon="lucide:activity" width="28" height="28"></iconify-icon>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statRataIPK">0.00</span>
+                        <span class="stat-label">Rata-Rata IPK</span>
+                    </div>
+                </div>
+                <div class="stat-card stat-card--orange">
+                    <div class="stat-icon">
+                        <iconify-icon icon="lucide:calendar" width="28" height="28"></iconify-icon>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statTotalSKS">0</span>
+                        <span class="stat-label">Total SKS</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Students Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Mahasiswa Terbaru</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>NIM</th>
+                                <th>Semester</th>
+                                <th>IPK</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardTableBody">
+                            <tr><td colspan="5" class="empty-state">Belum ada data mahasiswa</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE: MAHASISWA -->
+        <section class="page" id="pageMahasiswa">
+            <div class="page-header">
+                <h1>Manajemen Mahasiswa</h1>
+                <p class="page-desc">Tambah, edit, dan hapus data mahasiswa</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 id="formMhsTitle">Tambah Mahasiswa</h2>
+                </div>
+                <form id="formMahasiswa" class="form-grid">
+                    <input type="hidden" id="editMhsIndex" value="-1">
+                    <div class="form-group">
+                        <label for="inputNama">Nama Lengkap</label>
+                        <input type="text" id="inputNama" placeholder="Masukkan nama lengkap" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputNIM">NIM</label>
+                        <input type="text" id="inputNIM" placeholder="Masukkan NIM" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputSemester">Semester</label>
+                        <input type="number" id="inputSemester" min="1" max="14" placeholder="Semester" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="btnSimpanMhs">
+                            <iconify-icon icon="lucide:check" width="16" height="16"></iconify-icon>
+                            <span>Simpan</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="btnBatalMhs" style="display:none;">
+                            <iconify-icon icon="lucide:x" width="16" height="16"></iconify-icon>
+                            <span>Batal</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Daftar Mahasiswa</h2>
+                    <div class="search-box">
+                        <iconify-icon icon="lucide:search" width="16" height="16"></iconify-icon>
+                        <input type="text" id="searchMhs" placeholder="Cari mahasiswa...">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>NIM</th>
+                                <th>Semester</th>
+                                <th>Jumlah MK</th>
+                                <th>IPK</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mahasiswaTableBody">
+                            <tr><td colspan="7" class="empty-state">Belum ada data mahasiswa</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE: MATA KULIAH -->
+        <section class="page" id="pageMataKuliah">
+            <div class="page-header">
+                <h1>Manajemen Mata Kuliah</h1>
+                <p class="page-desc">Input nilai mata kuliah per mahasiswa</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Pilih Mahasiswa</h2>
+                </div>
+                <div class="form-group">
+                    <label for="selectMahasiswa">Mahasiswa</label>
+                    <select id="selectMahasiswa">
+                        <option value="">-- Pilih Mahasiswa --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="mkSection" style="display:none;">
+                <!-- Info Mahasiswa -->
+                <div class="info-banner" id="infoBannerMhs">
+                    <div class="info-avatar" id="infoAvatar">A</div>
+                    <div class="info-detail">
+                        <h3 id="infoNama">-</h3>
+                        <span id="infoNIM">-</span>
+                        <span id="infoSemester">Semester -</span>
+                    </div>
+                    <div class="info-stats">
+                        <div class="mini-stat">
+                            <span class="mini-stat-value" id="infoIPS">0.00</span>
+                            <span class="mini-stat-label">IPS</span>
+                        </div>
+                        <div class="mini-stat">
+                            <span class="mini-stat-value" id="infoIPK">0.00</span>
+                            <span class="mini-stat-label">IPK</span>
+                        </div>
+                        <div class="mini-stat">
+                            <span class="mini-stat-value" id="infoTotalSKS">0</span>
+                            <span class="mini-stat-label">SKS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Input Mata Kuliah -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 id="formMkTitle">Tambah Mata Kuliah</h2>
+                    </div>
+                    <form id="formMataKuliah">
+                        <input type="hidden" id="editMkIndex" value="-1">
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="inputMK">Nama Mata Kuliah</label>
+                                <input type="text" id="inputMK" placeholder="Contoh: Algoritma" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputSKS">SKS</label>
+                                <input type="number" id="inputSKS" min="1" max="6" placeholder="SKS" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputSemesterMK">Semester MK</label>
+                                <input type="number" id="inputSemesterMK" min="1" max="14" placeholder="Semester" required>
+                            </div>
+                        </div>
+
+                        <div class="form-section-label">Komponen Nilai &amp; Bobot (%)</div>
+                        <div class="nilai-bobot-grid">
+                            <div class="nilai-bobot-item">
+                                <div class="nb-header nb-tugas">Tugas</div>
+                                <div class="nb-fields">
+                                    <div class="form-group">
+                                        <label for="inputNilaiTugas">Nilai (0-100)</label>
+                                        <input type="number" id="inputNilaiTugas" min="0" max="100" placeholder="0-100" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputBobotTugas">Bobot (%)</label>
+                                        <input type="number" id="inputBobotTugas" min="0" max="100" placeholder="35" value="35" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="nilai-bobot-item">
+                                <div class="nb-header nb-uts">UTS</div>
+                                <div class="nb-fields">
+                                    <div class="form-group">
+                                        <label for="inputNilaiUTS">Nilai (0-100)</label>
+                                        <input type="number" id="inputNilaiUTS" min="0" max="100" placeholder="0-100" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputBobotUTS">Bobot (%)</label>
+                                        <input type="number" id="inputBobotUTS" min="0" max="100" placeholder="30" value="30" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="nilai-bobot-item">
+                                <div class="nb-header nb-uas">UAS</div>
+                                <div class="nb-fields">
+                                    <div class="form-group">
+                                        <label for="inputNilaiUAS">Nilai (0-100)</label>
+                                        <input type="number" id="inputNilaiUAS" min="0" max="100" placeholder="0-100" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputBobotUAS">Bobot (%)</label>
+                                        <input type="number" id="inputBobotUAS" min="0" max="100" placeholder="35" value="35" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nilai-akhir-preview">
+                            <div class="na-label">Nilai Akhir (otomatis)</div>
+                            <div class="na-value" id="previewNilaiAkhir">0.00</div>
+                            <div class="na-bobot-total">Total Bobot: <span id="previewTotalBobot">100</span>%</div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary" id="btnSimpanMK">
+                                    <iconify-icon icon="lucide:check" width="16" height="16"></iconify-icon>
+                                    <span>Simpan MK</span>
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="btnBatalMK" style="display:none;">
+                                    <iconify-icon icon="lucide:x" width="16" height="16"></iconify-icon>
+                                    <span>Batal</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tabel Mata Kuliah -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Daftar Mata Kuliah</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Mata Kuliah</th>
+                                    <th>SKS</th>
+                                    <th>Smt</th>
+                                    <th>Tugas</th>
+                                    <th>UTS</th>
+                                    <th>UAS</th>
+                                    <th>N. Akhir</th>
+                                    <th>Grade</th>
+                                    <th>Bobot</th>
+                                    <th>N. Mutu</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mkTableBody">
+                                <tr><td colspan="12" class="empty-state">Belum ada mata kuliah</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE: EXPORT -->
+        <section class="page" id="pageExport">
+            <div class="page-header">
+                <h1>Export Data</h1>
+                <p class="page-desc">Export seluruh data mahasiswa ke PDF atau Excel</p>
+            </div>
+
+            <div class="export-grid">
+                <div class="export-card">
+                    <div class="export-icon export-icon--pdf">
+                        <iconify-icon icon="lucide:file-text" width="48" height="48"></iconify-icon>
+                    </div>
+                    <h3>Export ke PDF</h3>
+                    <p>Download seluruh data mahasiswa beserta nilai dan IPK dalam format PDF.</p>
+                    <button class="btn btn-primary" id="btnExportPDF">
+                        <iconify-icon icon="lucide:download" width="16" height="16"></iconify-icon>
+                        <span>Download PDF</span>
+                    </button>
+                </div>
+
+                <div class="export-card">
+                    <div class="export-icon export-icon--excel">
+                        <iconify-icon icon="lucide:table-2" width="48" height="48"></iconify-icon>
+                    </div>
+                    <h3>Export ke Excel</h3>
+                    <p>Download seluruh data mahasiswa beserta nilai dan IPK dalam format Excel (.xlsx).</p>
+                    <button class="btn btn-primary btn-green" id="btnExportExcel">
+                        <iconify-icon icon="lucide:download" width="16" height="16"></iconify-icon>
+                        <span>Download Excel</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL KONFIRMASI HAPUS -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-icon">
+                <iconify-icon icon="lucide:alert-triangle" width="40" height="40"></iconify-icon>
+            </div>
+            <h3 id="modalTitle">Konfirmasi Hapus</h3>
+            <p id="modalMessage">Apakah Anda yakin ingin menghapus data ini?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="modalCancel">Batal</button>
+                <button class="btn btn-danger" id="modalConfirm">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
